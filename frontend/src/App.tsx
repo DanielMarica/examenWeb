@@ -1,10 +1,10 @@
-import { Outlet,  } from 'react-router-dom'
+import { Outlet, useNavigate,  } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import './App.css'
-import { Book,BookContext,MaybeAuthenticatedUser,AuthenticatedUser,User } from './type'
-import { fetchBooks } from '../src/utils/book-services'
+import { Book,BookContext,MaybeAuthenticatedUser,AuthenticatedUser,User,NewBook } from './type'
+import { fetchBooks,addBook } from '../src/utils/book-services'
 import {getAuthenticatedUser,storeAuthenticatedUser,clearAuthenticatedUser } from '../src/utils/session'
 
 
@@ -12,29 +12,24 @@ const App = () =>{
   
   const [books, setBooks] = useState<Book[]>([]);
   const [authenticatedUser, setAuthenticatedUser] = useState<MaybeAuthenticatedUser>(undefined);
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  // Ajout du useEffect pour charger l'utilisateur authentifié
+  // Combine les deux useEffect en un seul
   useEffect(() => {
-    const savedUser = getAuthenticatedUser();
-    if (savedUser) {
-      setAuthenticatedUser(savedUser);
-    }
-  }, []);
-
-  useEffect(() => {
-    const initBooks = async () => {
-      try {
-        if (authenticatedUser) {
-          const booksData = await fetchBooks(authenticatedUser);
+    const initializeApp = async () => {
+      const savedUser = getAuthenticatedUser();
+      if (savedUser) {
+        setAuthenticatedUser(savedUser);
+        try {
+          const booksData = await fetchBooks(savedUser);
           setBooks(booksData);
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
       }
     };
-    initBooks();
-  }, [authenticatedUser]);
+    initializeApp();
+  }, []);
 
   const loginUser = async (user: User) => {
     try {
@@ -64,6 +59,34 @@ const App = () =>{
     }
   };
 
+  // Ajouter cette fonction avant onAdded
+  const initBook = async () => {
+    try {
+      if (authenticatedUser) {
+        const booksData = await fetchBooks(authenticatedUser);
+        setBooks(booksData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const onAdded = async (newBook: NewBook) => {
+    console.log("Movie to add:", newBook);
+    try {
+      if (!authenticatedUser) {
+        throw new Error("User is not authenticated");
+      }
+      const movieToBeAdded = await addBook(newBook, authenticatedUser);
+      console.log("Movie added:", movieToBeAdded);
+      await initBook(); // Maintenant initBook est défini et peut être utilisé ici
+      navigate("/library");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
   const clearUser = () => {
     clearAuthenticatedUser();
     setAuthenticatedUser(undefined);
@@ -74,12 +97,13 @@ const App = () =>{
     loginUser,
     authenticatedUser,
     clearUser,
+    addBook: onAdded,
   };
 
 
   return (
     <div className="app-container">
-      <Navbar />
+      <Navbar authenticatedUser={authenticatedUser} />
       <main className="main-content">
         <Outlet context = {bookContext} />
       </main>

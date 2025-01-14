@@ -1,4 +1,4 @@
-import { Book, AuthenticatedUser } from "../type";
+import { Book, AuthenticatedUser, NewBook } from "../type";
 
 const fetchBooks = async (authenticatedUser?: AuthenticatedUser): Promise<Book[]> => {
   try {
@@ -26,4 +26,28 @@ const fetchBooks = async (authenticatedUser?: AuthenticatedUser): Promise<Book[]
   }
 };
 
-export { fetchBooks };
+const addBook = async (
+  movie: NewBook,
+  authenticatedUser: AuthenticatedUser
+): Promise<Book> => {
+  try {
+    const response = await fetch("/api/books", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authenticatedUser.token,
+      },
+      body: JSON.stringify(movie),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to add movie : " + response.statusText);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+export { fetchBooks,addBook };

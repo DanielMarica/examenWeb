@@ -10,6 +10,7 @@ interface BookContext{
     loginUser: (user: User) => Promise<void>;
     authenticatedUser: MaybeAuthenticatedUser;
     clearUser: () => void;
+    addBook: (book: NewBook) => Promise<void>;
     
 }
 type NewBook = Omit<Book, "id">;

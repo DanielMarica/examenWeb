@@ -7,4 +7,6 @@ interface Book {
 }
 
 
-export type { Book };
+type NewBook = Omit<Book, "id">;
+
+export type { Book,NewBook };

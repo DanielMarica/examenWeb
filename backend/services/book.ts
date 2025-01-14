@@ -1,6 +1,6 @@
 import path from "node:path";
-import { Book } from "../utils/type";
-import { parse } from "../utils/json";
+import { Book, NewBook } from "../utils/type";
+import { parse, serialize } from "../utils/json";
 
 const jsonDbPath = path.join(__dirname, "/../data/books.json");
 
@@ -56,7 +56,17 @@ function readOneBook(id: number): Book | undefined {
   return book;
 }
 
+function createOneBook(book: NewBook): Book {
+  const books = parse(jsonDbPath, defaultBooks);
+  const newId = books.length > 0 ? Math.max(...books.map((b) => b.id)) + 1 : 1;
+  const newBook = { id: newId, ...book };
+  books.push(newBook);
+  serialize(jsonDbPath, books); // Ajouter cette ligne pour sauvegarder les changements
+  return newBook;
+}
+
 export {
   readAllBooks,
-  readOneBook
+  readOneBook,
+  createOneBook
 };

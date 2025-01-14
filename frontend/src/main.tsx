@@ -6,6 +6,7 @@ import App from './App'
 import HomePage from './components/page/HomePage'
 import LibraryPage from './components/page/LibraryPage'
 import BookCard from './components/BookCard'
+import AddPageBook from './components/page/AddPageBook'
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: "book/:id",
         element: <BookCard />,
+      },
+      {
+        path: "add-page",
+        element: <AddPageBook  description='Bienvenue sur la page ajout de livre'/>,
       }
   
     ],

@@ -1,0 +1,102 @@
+######### NORMAL OPERATION  ###########
+
+@baseUrl = http://localhost:3000
+@booksUrl = {{baseUrl}}/books
+
+### Read all books
+GET {{booksUrl}}
+
+### Read book identified by 2
+GET {{booksUrl}}/2
+
+### Create a book by using the admin account
+#### First login as the admin
+##### Define a request variable named admin:
+# @name admin
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+    "username":"admin",
+    "password":"admin"
+}
+
+#### Create a book with the admin token
+POST {{booksUrl}}
+Content-Type: application/json
+Authorization: {{admin.response.body.token}}
+
+{
+    "title": "The Hobbit",
+    "author": "J.R.R. Tolkien",
+    "year": 1937,
+    "coverImage": "https://images.unsplash.com/photo-123456789"
+}
+
+######### ERROR OPERATION  ###########
+
+### Read book which does not exist
+GET {{booksUrl}}/100
+
+### Create a book without authorization token
+POST {{booksUrl}}
+Content-Type: application/json
+
+{
+    "title": "Test Book",
+    "author": "Test Author",
+    "year": 2023
+}
+
+### Create a book with missing required field
+POST {{booksUrl}}
+Content-Type: application/json
+Authorization: {{admin.response.body.token}}
+
+{
+    "title": "Invalid Book",
+    "year": 2023
+}
+
+### Create a book with invalid year
+POST {{booksUrl}}
+Content-Type: application/json
+Authorization: {{admin.response.body.token}}
+
+{
+    "title": "Invalid Book",
+    "author": "Some Author",
+    "year": -2023
+}
+
+### Create a book with empty required fields
+POST {{booksUrl}}
+Content-Type: application/json
+Authorization: {{admin.response.body.token}}
+
+{
+    "title": "",
+    "author": "Test Author",
+    "year": 2023
+}
+
+### Try to create a book as manager
+# @name manager
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+    "username":"manager",
+    "password":"manager"
+}
+
+### Create book with manager token
+POST {{booksUrl}}
+Content-Type: application/json
+Authorization: {{manager.response.body.token}}
+
+{
+    "title": "Unauthorized Book",
+    "author": "Manager",
+    "year": 2024
+}
