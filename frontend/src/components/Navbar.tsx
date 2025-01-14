@@ -15,6 +15,9 @@ const Navbar = ({ authenticatedUser }: NavbarProps) => {
                 {authenticatedUser && (
                     <li><Link to="/add-page">AddPageBook</Link></li>
                 )}
+                 {!authenticatedUser && (
+                    <li><Link to="/register">Register</Link></li>
+                )}
             </ul>
         </nav>
     );

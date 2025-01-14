@@ -59,6 +59,35 @@ const App = () =>{
     }
   };
 
+  const registerUser = async (newUser: User) => {
+    try {
+      const options = {
+        method: "POST",
+        body: JSON.stringify(newUser),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const response = await fetch("/api/auths/register", options);
+
+      if (!response.ok)
+        throw new Error(
+          `fetch error : ${response.status} : ${response.statusText}`
+        );
+
+      const createdUser: AuthenticatedUser = await response.json();
+
+      setAuthenticatedUser(createdUser);
+      storeAuthenticatedUser(createdUser);
+
+      console.log("createdUser: ", createdUser);
+    } catch (err) {
+      console.error("registerUser::error: ", err);
+      throw err;
+    }
+  };
+
   // Ajouter cette fonction avant onAdded
   const initBook = async () => {
     try {
@@ -98,6 +127,7 @@ const App = () =>{
     authenticatedUser,
     clearUser,
     addBook: onAdded,
+    registerUser,
   };
 
 
