@@ -1,35 +1,91 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Outlet,  } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import './App.css'
+import { Book,BookContext,MaybeAuthenticatedUser,AuthenticatedUser,User } from './type'
+import { fetchBooks } from '../src/utils/book-services'
+import {getAuthenticatedUser,storeAuthenticatedUser,clearAuthenticatedUser } from '../src/utils/session'
 
-function App() {
-  const [count, setCount] = useState(0)
+
+const App = () =>{
+  
+  const [books, setBooks] = useState<Book[]>([]);
+  const [authenticatedUser, setAuthenticatedUser] = useState<MaybeAuthenticatedUser>(undefined);
+  //const navigate = useNavigate();
+
+  // Ajout du useEffect pour charger l'utilisateur authentifié
+  useEffect(() => {
+    const savedUser = getAuthenticatedUser();
+    if (savedUser) {
+      setAuthenticatedUser(savedUser);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initBooks = async () => {
+      try {
+        if (authenticatedUser) {
+          const booksData = await fetchBooks(authenticatedUser);
+          setBooks(booksData);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    initBooks();
+  }, [authenticatedUser]);
+
+  const loginUser = async (user: User) => {
+    try {
+      const options = {
+        method: "POST",
+        body: JSON.stringify(user),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const response = await fetch("/api/auths/login", options);
+
+      if (!response.ok)
+        throw new Error(
+          `fetch error : ${response.status} : ${response.statusText}`
+        );
+
+      const authenticatedUser: AuthenticatedUser = await response.json();
+      console.log("authenticatedUser: ", authenticatedUser);
+
+      setAuthenticatedUser(authenticatedUser);
+      storeAuthenticatedUser(authenticatedUser);
+    } catch (err) {
+      console.error("loginUser::error: ", err);
+      throw err;
+    }
+  };
+
+  const clearUser = () => {
+    clearAuthenticatedUser();
+    setAuthenticatedUser(undefined);
+  };
+  
+  const bookContext : BookContext = {
+    books,
+    loginUser,
+    authenticatedUser,
+    clearUser,
+  };
+
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app-container">
+      <Navbar />
+      <main className="main-content">
+        <Outlet context = {bookContext} />
+      </main>
+      <Footer title="Livius Daniel Marica" />
+    </div>
   )
 }
 
-export default App
+export default App;
